@@ -1,39 +1,34 @@
-
 # Lab 6 — REST vs. gRPC Performance Comparison
 
 All latency values are in milliseconds per operation.
 
 | Method | Local | Same-Zone | Different Region |
 |---|---:|---:|---:|
-| REST add | 3.917 | 4.660 | 170.661 |
-| gRPC add | 0.962 | 1.280 | 82.757 |
-| REST rawimg | 7.310 | 11.289 | 646.652 |
-| gRPC rawimg | 13.305 | 17.354 | 163.850 |
-| REST dotproduct | 4.354 | 5.192 | 169.589 |
-| gRPC dotproduct | 1.069 | 1.468 | 72.000 |
-| REST jsonimg | 44.555 | 48.908 | 754.089 |
-| gRPC jsonimg | 40.865 | 40.955 | 223.917 |
-| PING (average RTT) | 0.052 | 0.557 | 65.269 |
+| REST add | 3.917 | 4.660 | 334.417 |
+| gRPC add | 0.962 | 1.280 | 183.833 |
+| REST rawimg | 7.310 | 11.289 | 1402.761 |
+| gRPC rawimg | 13.305 | 17.354 | 213.676 |
+| REST dotproduct | 4.354 | 5.192 | 345.954 |
+| gRPC dotproduct | 1.069 | 1.468 | 146.637 |
+| REST jsonimg | 44.555 | 48.908 | 1552.651 |
+| gRPC jsonimg | 40.865 | 40.955 | 254.521 |
+| PING (average RTT) | 0.052 | 0.557 | 141.448 |
 
 ## Performance Observations
 
-The experiment compares the performance of REST and gRPC for arithmetic operations and image processing under different network conditions.
+The experiment compared REST and gRPC for arithmetic and image processing operations under local, same-zone, and different-region network conditions.
 
-For local communication, gRPC performed better for addition, dot product, and JSON image operations, while REST was faster for raw image processing. Similar results were observed for same-zone communication.
+In local and same-zone experiments, gRPC performed better for addition, dot product, and JSON image operations, whereas REST was faster for raw image processing. In the different-region experiment between Oregon and Frankfurt, gRPC outperformed REST for all four operations.
 
-For different-region communication, gRPC outperformed REST in all four operations. Network latency significantly affected performance, with average PING latency increasing from 0.052 ms locally to 65.269 ms across regions.
+Network latency significantly affected communication performance. The average PING latency increased from 0.052 ms locally to 0.557 ms within the same zone and 141.448 ms between regions. In this implementation, REST creates a new TCP connection for each request, whereas gRPC reuses a connection across multiple requests. Connection reuse reduces communication overhead, particularly over high-latency networks.
 
-REST establishes a new TCP connection for each request in this implementation, adding connection overhead. In contrast, gRPC reuses a single TCP connection across multiple requests. This reduces communication overhead and provides significant performance improvements over higher-latency networks.
-
-Overall, gRPC demonstrated better performance for most operations, especially across regions. The results show that network latency and connection reuse are important factors when selecting communication protocols for distributed systems.
+The image-processing operations experienced higher response times because of their larger payloads. Overall, gRPC showed superior performance in the different-region experiments, highlighting the importance of network latency, payload size, and connection management in distributed systems.
 
 ## Testing Configuration
 
-- Local: Client and server on the same VM.
-- Same-Zone: Client and server on separate VMs within us-west1-a.
-- Different Region: Client in us-east1-b and server in us-west1-a.
+- Local: Client and server on the same VM in us-west1-a.
+- Same-Zone: Client and server on separate VMs in us-west1-a.
+- Different Region: Client in us-west1-a (Oregon), server in europe-west3-a (Frankfurt).
 - Local and Same-Zone: 1000 repetitions for arithmetic operations and 100 for image operations.
-- Different Region: 30 repetitions for arithmetic operations and 10 for image operations.
-
-The different-region results are preliminary measurements using reduced repetition counts.
-  
+- Different Region: 100 repetitions for each operation.
+- All communication used internal IP addresses.
